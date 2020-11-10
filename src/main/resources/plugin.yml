@@ -1,0 +1,20 @@
+name: CV_Economy
+version: ${project.version}
+main: com.motompro.cv_economy.CV_Economy
+authors: [TomMo]
+description: Un plugin rajoutant un système d'économie.
+commands:
+  economy:
+    description:
+  money:
+    description:
+  pay:
+    description:
+  take:
+    description:
+  baltop:
+    description:
+  deposit:
+    description:
+  withdraw:
+    description:
