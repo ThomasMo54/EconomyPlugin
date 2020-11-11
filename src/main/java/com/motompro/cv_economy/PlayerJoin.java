@@ -23,7 +23,7 @@ public class PlayerJoin implements Listener {
         if(!plugin.getAccountsConfig().contains(playerUUID)) {
             HashMap<String, Object> playerAccount = new HashMap<>();
             playerAccount.put("name", player.getName());
-            playerAccount.put("balance", 0.0d);
+            playerAccount.put("balance", plugin.getConfig().getDouble("startMoney"));
             plugin.getAccountsConfig().createSection(playerUUID, playerAccount);
         } else {
             plugin.getAccountsConfig().set("name", player.getName());

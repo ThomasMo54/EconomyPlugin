@@ -12,6 +12,8 @@ commands:
     description:
   take:
     description:
+  givemoney:
+    description:
   baltop:
     description:
   deposit:

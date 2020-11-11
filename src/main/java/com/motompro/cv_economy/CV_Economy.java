@@ -14,6 +14,8 @@ import java.util.*;
 
 public final class CV_Economy extends JavaPlugin {
 
+    private FileConfiguration defaultConfig = this.getConfig();
+
     private File accountsConfigFile;
     private FileConfiguration accountsConfig;
 
@@ -23,10 +25,15 @@ public final class CV_Economy extends JavaPlugin {
     public void onEnable() {
         this.createAccountsConfig();
 
+        defaultConfig.addDefault("startMoney", 1000);
+        defaultConfig.options().copyDefaults(true);
+        this.saveConfig();
+
         getCommand("economy").setExecutor(new EconomyCommand(this));
         getCommand("money").setExecutor(new MoneyCommand(this));
         getCommand("pay").setExecutor(new PayCommand(this));
         getCommand("take").setExecutor(new TakeCommand(this));
+        getCommand("givemoney").setExecutor(new GiveMoneyCommand(this));
         getCommand("baltop").setExecutor(new BaltopCommand(this));
         getCommand("deposit").setExecutor(new DepositCommand(this));
         getCommand("withdraw").setExecutor(new WithdrawCommand(this));
