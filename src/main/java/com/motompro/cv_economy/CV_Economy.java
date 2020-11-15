@@ -1,12 +1,22 @@
 package com.motompro.cv_economy;
 
 import com.motompro.cv_economy.commands.*;
+import de.tr7zw.nbtapi.NBTItem;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.Material;
+import org.bukkit.NamespacedKey;
 import org.bukkit.configuration.ConfigurationSection;
 import org.bukkit.configuration.InvalidConfigurationException;
 import org.bukkit.configuration.file.FileConfiguration;
 import org.bukkit.configuration.file.YamlConfiguration;
+import org.bukkit.event.inventory.InventoryCloseEvent;
+import org.bukkit.inventory.Inventory;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.inventory.meta.SkullMeta;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.scheduler.BukkitRunnable;
 
 import java.io.File;
 import java.io.IOException;
@@ -19,6 +29,9 @@ public final class CV_Economy extends JavaPlugin {
     private File accountsConfigFile;
     private FileConfiguration accountsConfig;
 
+    private ArrayList<Trade> trades = new ArrayList<>();
+    public Inventory tradeInventory;
+
     public static String MESSAGE_PREFIX = ChatColor.AQUA + "CV" + ChatColor.GOLD + "Economy " + ChatColor.GRAY + "» ";
 
     @Override
@@ -29,6 +42,8 @@ public final class CV_Economy extends JavaPlugin {
         defaultConfig.options().copyDefaults(true);
         this.saveConfig();
 
+        initTradeInventory();
+
         getCommand("economy").setExecutor(new EconomyCommand(this));
         getCommand("money").setExecutor(new MoneyCommand(this));
         getCommand("pay").setExecutor(new PayCommand(this));
@@ -37,8 +52,10 @@ public final class CV_Economy extends JavaPlugin {
         getCommand("baltop").setExecutor(new BaltopCommand(this));
         getCommand("deposit").setExecutor(new DepositCommand(this));
         getCommand("withdraw").setExecutor(new WithdrawCommand(this));
+        getCommand("trade").setExecutor(new TradeCommand(this));
 
         getServer().getPluginManager().registerEvents(new PlayerJoin(this), this);
+        getServer().getPluginManager().registerEvents(new TradeEvents(this), this);
     }
 
     @Override
@@ -69,6 +86,43 @@ public final class CV_Economy extends JavaPlugin {
         } catch (IOException e) {
             e.printStackTrace();
         }
+    }
+
+    private void initTradeInventory() {
+        ItemStack separator = new ItemStack(Material.STAINED_GLASS_PANE, 1, (short) 7);
+        ItemMeta separatorMeta = separator.getItemMeta();
+        separatorMeta.setDisplayName(" ");
+        separator.setItemMeta(separatorMeta);
+
+        NBTItem separatorNBT = new NBTItem(separator);
+        separatorNBT.setBoolean("notClickable", true);
+
+        tradeInventory = Bukkit.createInventory(null, 54);
+        for(int i = 4; i < 50; i += 9) {
+            tradeInventory.setItem(i, separatorNBT.getItem());
+        }
+        for(int i = 2; i < 7; i++) {
+            tradeInventory.setItem(i, separatorNBT.getItem());
+        }
+
+        ItemStack senderHead = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        NBTItem senderNBT = new NBTItem(senderHead);
+        senderNBT.setBoolean("notClickable", true);
+        tradeInventory.setItem(0, senderNBT.getItem());
+
+        ItemStack targetHead = new ItemStack(Material.SKULL_ITEM, 1, (short) 3);
+        NBTItem targetNBT = new NBTItem(targetHead);
+        targetNBT.setBoolean("notClickable", true);
+        tradeInventory.setItem(8, targetNBT.getItem());
+
+        ItemStack acceptButton = new ItemStack(Material.STAINED_CLAY, 1, (short) 14);
+        ItemMeta acceptButtonMeta = acceptButton.getItemMeta();
+        acceptButtonMeta.setDisplayName(ChatColor.RED + "Pas prêt");
+        acceptButton.setItemMeta(acceptButtonMeta);
+        NBTItem acceptButtonNBT = new NBTItem(acceptButton);
+        acceptButtonNBT.setBoolean("acceptButton", true);
+        tradeInventory.setItem(1, acceptButtonNBT.getItem());
+        tradeInventory.setItem(7, acceptButtonNBT.getItem());
     }
 
     public double getPlayerMoney(UUID playerUUID) {
@@ -140,5 +194,30 @@ public final class CV_Economy extends JavaPlugin {
         }
 
         return baltop;
+    }
+
+    public void addTrade(Trade trade) {
+        trades.add(trade);
+        new BukkitRunnable() {
+            String sender = trade.getSender().getName();
+            @Override
+            public void run() {
+                for(int i = 0; i < trades.size(); i++) {
+                    Trade t = trades.get(i);
+                    if(t.getSender().getName().equals(sender)) {
+                        if(!t.isAccepted()) {
+                            t.getSender().sendMessage(CV_Economy.MESSAGE_PREFIX + ChatColor.RED + "La demande de trade a expiré !");
+                            t.getTarget().sendMessage(CV_Economy.MESSAGE_PREFIX + ChatColor.RED + "La demande de trade a expiré !");
+                            trades.remove(i);
+                            break;
+                        }
+                    }
+                }
+            }
+        }.runTaskLater(this, 600);
+    }
+
+    public ArrayList<Trade> getTrades() {
+        return trades;
     }
 }

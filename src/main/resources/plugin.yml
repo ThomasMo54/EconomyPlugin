@@ -20,3 +20,5 @@ commands:
     description:
   withdraw:
     description:
+  trade:
+    description:
